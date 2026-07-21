@@ -163,3 +163,17 @@ Esta organización facilita el mantenimiento, la escalabilidad y la incorporaci�
 - Inscripción a eventos
 - Control de cupos
 - Notificaciones
+
+## Evidencias
+
+### Servidor en ejecución
+
+![Servidor ejecutándose]('https://res.cloudinary.com/dcfo0mbfj/image/upload/v1784654404/serverRun_bwrwnt.png')
+
+### Endpoint Health
+
+![Health Endpoint]('https://res.cloudinary.com/dcfo0mbfj/image/upload/v1784654219/servidorApp_lzdlpp.png')
+
+### Endpoint Events
+
+![Events Endpoint]('https://res.cloudinary.com/dcfo0mbfj/image/upload/v1784654231/rutaEvent_apyvgn.png')
