@@ -1,0 +1,165 @@
+# Plataforma de Eventos e Inscripciones
+
+## Descripción
+
+Plataforma de Eventos e Inscripciones es una API REST desarrollada con Node.js y Express siguiendo una arquitectura por capas. Su objetivo es permitir la gestión de eventos y el registro de usuarios a los mismos.
+
+Esta primera entrega corresponde a la base arquitectónica del proyecto, preparada para incorporar en futuras etapas autenticación, autorización mediante roles, gestión de eventos, inscripciones, control de cupos y notificaciones.
+
+---
+
+## Tecnologías utilizadas
+
+- Node.js
+- Express.js
+- JavaScript (ES Modules)
+- Dotenv
+
+---
+
+## Instalación
+
+1. Clonar el repositorio
+
+```bash
+git clone <URL_DEL_REPOSITORIO>
+```
+
+2. Ingresar al proyecto
+
+```bash
+cd arquitectura_modular
+```
+
+3. Instalar dependencias
+
+```bash
+npm install
+```
+
+4. Crear un archivo `.env` tomando como referencia el archivo `.env.example`
+
+5. Ejecutar el proyecto
+
+```bash
+npm run dev
+```
+
+---
+
+## Variables de entorno
+
+Crear un archivo `.env` con las siguientes variables:
+
+```env
+PORT=8080
+NODE_ENV=development
+MONGO_URL=mongodb://localhost:27017/events
+JWT_SECRET=tu_clave_secreta
+```
+
+---
+
+## Estructura del proyecto
+
+```
+src/
+│
+├── app.js
+├── server.js
+│
+├── config/
+├── routes/
+├── controllers/
+├── services/
+├── repositories/
+├── dao/
+├── models/
+├── middlewares/
+└── utils/
+```
+
+Cada carpeta cumple una responsabilidad específica siguiendo el principio de separación de responsabilidades.
+
+---
+
+## Endpoints disponibles
+
+### Health Check
+
+```
+GET /api/health
+```
+
+Respuesta
+
+```json
+{
+    "status": "ok",
+    "message": "Servidor activo"
+}
+```
+
+---
+
+### Eventos
+
+```
+GET /api/events
+```
+
+Respuesta
+
+```json
+{
+    "status": "success",
+    "payload": []
+}
+```
+
+---
+
+### Sessions
+
+```
+GET /api/sessions
+```
+
+Ruta creada como estructura inicial para la futura implementación de autenticación.
+
+---
+
+## Arquitectura
+
+El proyecto implementa una arquitectura por capas:
+
+```
+Routes
+    ↓
+Controllers
+    ↓
+Services
+    ↓
+Repositories
+    ↓
+DAO
+    ↓
+Models
+```
+
+Esta organización facilita el mantenimiento, la escalabilidad y la incorporación de nuevas funcionalidades.
+
+---
+
+## Próximas funcionalidades
+
+- Registro de usuarios
+- Login
+- JWT
+- Cookies
+- Passport
+- Roles
+- CRUD de eventos
+- Inscripción a eventos
+- Control de cupos
+- Notificaciones
