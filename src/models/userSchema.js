@@ -3,16 +3,20 @@ import moongoose from "mongoose";
 const userSchema = new moongoose.Schema({
     first_name: {
         type: String,
-        required: true
+        required: true,
+        trim:true
     },
     last_name: {
         type: String,
-        required: true
+        required: true,
+        trim:true
     },
     email: {
         type: String,
         required: true,
-        unique: true
+        lowercase: true,
+        unique: true,
+        trim:true
     },
     password: {
         type: String,
@@ -29,4 +33,4 @@ const userSchema = new moongoose.Schema({
     timestamps: true
 });
 
-export const UserModel = moongoose.model('User', userSchema);
+export const UserModel = moongoose.model('user', userSchema);
