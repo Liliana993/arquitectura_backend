@@ -5,6 +5,7 @@ import { connectDB } from './config/database.js';
 
 const app = express();
 app.use(express.json());
+
 connectDB();
 
 app.use('/api/events', eventRouter);
