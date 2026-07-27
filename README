@@ -1,55 +1,48 @@
 # Plataforma de Eventos e Inscripciones
 
-## Descripción
+API REST desarrollada con **Node.js** y **Express**, organizada mediante una arquitectura por capas para facilitar el mantenimiento y la escalabilidad del proyecto.
 
-Plataforma de Eventos e Inscripciones es una API REST desarrollada con Node.js y Express siguiendo una arquitectura por capas. Su objetivo es permitir la gestión de eventos y el registro de usuarios a los mismos.
-
-Esta primera entrega corresponde a la base arquitectónica del proyecto, preparada para incorporar en futuras etapas autenticación, autorización mediante roles, gestión de eventos, inscripciones, control de cupos y notificaciones.
+Esta primera entrega corresponde a la base arquitectónica del proyecto final de **Backend II**, preparada para incorporar en futuras etapas autenticación, autorización por roles, gestión de eventos, inscripciones, control de cupos y notificaciones.
 
 ---
 
-## Tecnologías utilizadas
+# Tecnologías utilizadas
 
-- Node.js
-- Express.js
-- JavaScript (ES Modules)
-- Dotenv
+- Node.js – Entorno de ejecución de JavaScript.
+- Express.js – Framework para el desarrollo de APIs REST.
+- Dotenv – Gestión de variables de entorno.
+- Nodemon – Reinicio automático del servidor durante el desarrollo.
+- JavaScript ES Modules – Sistema de módulos (`import` / `export`).
 
 ---
 
-## Instalación
+# Instalación
 
-1. Clonar el repositorio
-
-```bash
-git clone <URL_DEL_REPOSITORIO>
-```
-
-2. Ingresar al proyecto
+## 1. Clonar el repositorio
 
 ```bash
-cd arquitectura_modular
+git clone https://github.com/Liliana993/arquitectura_backend.git
 ```
 
-3. Instalar dependencias
+## 2. Ingresar al proyecto
+
+```bash
+cd arquitectura_backend
+```
+
+## 3. Instalar dependencias
 
 ```bash
 npm install
 ```
 
-4. Crear un archivo `.env` tomando como referencia el archivo `.env.example`
-
-5. Ejecutar el proyecto
-
-```bash
-npm run dev
-```
-
 ---
 
-## Variables de entorno
+# Configuración
 
-Crear un archivo `.env` con las siguientes variables:
+Crear un archivo **.env** utilizando como base **.env.example**.
+
+Ejemplo:
 
 ```env
 PORT=8080
@@ -58,122 +51,149 @@ MONGO_URL=mongodb://localhost:27017/events
 JWT_SECRET=tu_clave_secreta
 ```
 
+### Variables de entorno
+
+| Variable | Descripción |
+|----------|-------------|
+| PORT | Puerto donde se ejecuta el servidor. |
+| NODE_ENV | Entorno de ejecución de la aplicación. |
+| MONGO_URL | URL de conexión a MongoDB (implementación futura). |
+| JWT_SECRET | Clave para la firma de JWT (implementación futura). |
+
 ---
 
-## Estructura del proyecto
+# Ejecución
 
+## Modo desarrollo
+
+```bash
+npm run dev
 ```
-src/
+
+El servidor iniciará utilizando el puerto configurado en el archivo `.env`.
+
+---
+
+# Estructura del proyecto
+
+```text
+.
+├── src/
+│   ├── config/          # Configuración de la aplicación
+│   ├── controllers/     # Controladores de la API
+│   ├── dao/             # Acceso a datos
+│   ├── middlewares/     # Middlewares personalizados
+│   ├── models/          # Modelos de la aplicación
+│   ├── repositories/    # Comunicación con la capa de datos
+│   ├── routes/          # Definición de endpoints
+│   ├── services/        # Lógica de negocio
+│   ├── utils/           # Funciones auxiliares
+│   ├── app.js           # Configuración de Express e inicio del servidor
 │
-├── app.js
-├── server.js
-│
-├── config/
-├── routes/
-├── controllers/
-├── services/
-├── repositories/
-├── dao/
-├── models/
-├── middlewares/
-└── utils/
-```
-
-Cada carpeta cumple una responsabilidad específica siguiendo el principio de separación de responsabilidades.
-
----
-
-## Endpoints disponibles
-
-### Health Check
-
-```
-GET /api/health
-```
-
-Respuesta
-
-```json
-{
-    "status": "ok",
-    "message": "Servidor activo"
-}
+├── .env.example
+├── .gitignore
+├── package.json
+├── package-lock.json
+└── README.md
 ```
 
 ---
 
-### Eventos
+# Arquitectura
 
-```
-GET /api/events
-```
+La aplicación implementa una arquitectura por capas:
 
-Respuesta
-
-```json
-{
-    "status": "success",
-    "payload": []
-}
-```
-
----
-
-### Sessions
-
-```
-GET /api/sessions
-```
-
-Ruta creada como estructura inicial para la futura implementación de autenticación.
-
----
-
-## Arquitectura
-
-El proyecto implementa una arquitectura por capas:
-
-```
+```text
 Routes
-    ↓
+   │
+   ▼
 Controllers
-    ↓
+   │
+   ▼
 Services
-    ↓
+   │
+   ▼
 Repositories
-    ↓
+   │
+   ▼
 DAO
-    ↓
+   │
+   ▼
 Models
 ```
 
-Esta organización facilita el mantenimiento, la escalabilidad y la incorporación de nuevas funcionalidades.
+Cada capa posee una responsabilidad específica, permitiendo una mejor organización, mantenimiento y escalabilidad del proyecto.
 
 ---
 
-## Próximas funcionalidades
+# Endpoints disponibles
 
-- Registro de usuarios
-- Login
-- JWT
-- Cookies
-- Passport
-- Roles
-- CRUD de eventos
-- Inscripción a eventos
-- Control de cupos
-- Notificaciones
+## Eventos
 
-## Evidencias
+```http
+GET /api/events
+```
 
-### Servidor en ejecución
+Obtiene el listado inicial de eventos.
+
+Respuesta:
+
+```json
+{
+  "status": "success",
+  "payload": []
+}
+```
+
+---
+
+## Events
+
+```http
+POST /api/events
+```
+Crea un nuevo evento.
+
+Respuesta:
+
+```json
+{
+  "status": "success",
+  "messages": "Evento creado con éxito!"
+}
+```
+---
+
+# Próximas funcionalidades
+
+- Registro de usuarios.
+- Inicio de sesión.
+- Autenticación mediante JWT.
+- Implementación de Passport.
+- Gestión de roles.
+- CRUD de eventos.
+- Inscripción de usuarios.
+- Control de cupos.
+- Notificaciones.
+
+---
+
+# Evidencias
+
+## Servidor en ejecución
 
 ![Servidor ejecutándose](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1784654404/serverRun_bwrwnt.png)
 
-### Endpoint Health
+---
 
-![Health Endpoint](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1784654219/servidorApp_lzdlpp.png)
+## Endpoint Events
 
-### Endpoint Events
+![Endpoint Events GET](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1784654231/rutaEvent_apyvgn.png)
+![Endpoint Events POST](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1785178601/postEvents_nctbvp.png)
+---
 
-![Events Endpoint](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1784654231/rutaEvent_apyvgn.png)
+# Notas
+
+- El proyecto utiliza **ES Modules** (`"type": "module"` en `package.json`).
+- La estructura se encuentra preparada para integrar MongoDB, autenticación y autorización en las próximas entregas.
+- El proyecto sigue una arquitectura por capas para facilitar su evolución durante el curso.
