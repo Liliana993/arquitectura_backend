@@ -46,9 +46,7 @@ Ejemplo:
 
 ```env
 PORT=8080
-NODE_ENV=development
 MONGO_URL=mongodb://localhost:27017/events
-JWT_SECRET=tu_clave_secreta
 ```
 
 ### Variables de entorno
@@ -56,9 +54,7 @@ JWT_SECRET=tu_clave_secreta
 | Variable | Descripción |
 |----------|-------------|
 | PORT | Puerto donde se ejecuta el servidor. |
-| NODE_ENV | Entorno de ejecución de la aplicación. |
 | MONGO_URL | URL de conexión a MongoDB (implementación futura). |
-| JWT_SECRET | Clave para la firma de JWT (implementación futura). |
 
 ---
 
@@ -81,12 +77,9 @@ El servidor iniciará utilizando el puerto configurado en el archivo `.env`.
 ├── src/
 │   ├── config/          # Configuración de la aplicación
 │   ├── controllers/     # Controladores de la API
-│   ├── dao/             # Acceso a datos
 │   ├── middlewares/     # Middlewares personalizados
 │   ├── models/          # Modelos de la aplicación
-│   ├── repositories/    # Comunicación con la capa de datos
 │   ├── routes/          # Definición de endpoints
-│   ├── services/        # Lógica de negocio
 │   ├── utils/           # Funciones auxiliares
 │
 |── app.js           # Configuración de Express e inicio del servidor
@@ -108,15 +101,6 @@ Routes
    │
    ▼
 Controllers
-   │
-   ▼
-Services
-   │
-   ▼
-Repositories
-   │
-   ▼
-DAO
    │
    ▼
 Models
