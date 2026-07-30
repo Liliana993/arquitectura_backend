@@ -1,6 +1,6 @@
 import express from 'express';
 import 'dotenv/config';
-import eventRouter from './src/routes/event.routes.js'
+import eventRouter from './src/routes/events.routes.js'
 //import { config } from './src/config/config.js';
 import { connectDB } from './src/config/database.js';
 
