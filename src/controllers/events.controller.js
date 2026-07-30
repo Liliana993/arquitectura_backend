@@ -6,8 +6,7 @@ export const getEvents = (req, res) => {
     });
     }catch(error){
         res.status(500).json({
-          status: "error",
-          message: "Error al obtener los eventos."
+          error: "Error al obtener los eventos."
         })
     }
     
@@ -21,8 +20,7 @@ export const createEvent = (req, res) => {
      })
   } catch (error) {
     res.status(500).json({
-      status: 'error',
-      messages: 'Error al crear el evento.'
+      error: 'Error al intentar crear el evento.'
      })
   }
 }

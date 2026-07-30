@@ -88,8 +88,8 @@ El servidor iniciará utilizando el puerto configurado en el archivo `.env`.
 │   ├── routes/          # Definición de endpoints
 │   ├── services/        # Lógica de negocio
 │   ├── utils/           # Funciones auxiliares
-│   ├── app.js           # Configuración de Express e inicio del servidor
 │
+|── app.js           # Configuración de Express e inicio del servidor
 ├── .env.example
 ├── .gitignore
 ├── package.json
