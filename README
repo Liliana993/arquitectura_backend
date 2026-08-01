@@ -73,37 +73,55 @@ El servidor iniciará utilizando el puerto configurado en el archivo `.env`.
 # Estructura del proyecto
 
 ```text
-.
+
 ├── src/
-│   ├── config/          # Configuración de la aplicación
-│   ├── controllers/     # Controladores de la API
+│   ├── config/          # Configuración de la aplicación y conexión a la base de datos
+│   ├── controllers/     # Controladores (manejan req y res)
+│   ├── dao/             # Acceso directo a la base de datos (Mongoose)
 │   ├── middlewares/     # Middlewares personalizados
-│   ├── models/          # Modelos de la aplicación
+│   ├── models/          # Esquemas de Mongoose
+│   ├── repositories/    # Intermediarios entre Services y DAO
 │   ├── routes/          # Definición de endpoints
-│   ├── utils/           # Funciones auxiliares
+│   ├── services/        # Lógica de negocio
+│   └── utils/           # Funciones auxiliares
 │
-|── app.js           # Configuración de Express e inicio del servidor
-├── .env.example
+├── app.js               # Configuración de Express e inicio del servidor
+├── .env.example         # Variables de entorno de ejemplo
 ├── .gitignore
 ├── package.json
 ├── package-lock.json
 └── README.md
 ```
 
----
-
 # Arquitectura
 
 La aplicación implementa una arquitectura por capas:
+
+## Arquitectura por capas
 
 ```text
 Routes
    │
    ▼
+Middlewares
+   │
+   ▼
 Controllers
    │
    ▼
-Models
+Services
+   │
+   ▼
+Repositories
+   │
+   ▼
+DAO
+   │
+   ▼
+Models (Mongoose)
+   │
+   ▼
+MongoDB
 ```
 
 Cada capa posee una responsabilidad específica, permitiendo una mejor organización, mantenimiento y escalabilidad del proyecto.
@@ -112,7 +130,26 @@ Cada capa posee una responsabilidad específica, permitiendo una mejor organizac
 
 # Endpoints disponibles
 
-## Eventos
+## Eventos - GET
+
+```http
+GET /api/events/health
+```
+
+Obtiene el listado inicial de eventos.
+
+Respuesta:
+
+```json
+{
+  "status": "ok",
+  "message": "API corriendo con éxito!"
+}
+```
+
+---
+
+## Events - GET
 
 ```http
 GET /api/events
@@ -131,7 +168,7 @@ Respuesta:
 
 ---
 
-## Events
+## Events - POST
 
 ```http
 POST /api/events
