@@ -1,6 +1,6 @@
-import moongose from "mongoose";
+import mongoose from "mongoose";
 
-const eventSchema = new moongose.Schema({
+const eventSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true
@@ -19,4 +19,4 @@ const eventSchema = new moongose.Schema({
 }
 );
 
-export const EventModel = moongose.model('event', eventSchema);
+export const EventModel = mongoose.model('event', eventSchema);
