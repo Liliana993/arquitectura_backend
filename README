@@ -1,18 +1,25 @@
 # Plataforma de Eventos e Inscripciones
 
-API REST desarrollada con **Node.js** y **Express**, organizada mediante una arquitectura por capas para facilitar el mantenimiento y la escalabilidad del proyecto.
+API REST desarrollada con **Node.js, Express y MongoDB**, organizada mediante una arquitectura por capas para facilitar el mantenimiento, la escalabilidad y la incorporación progresiva de nuevas funcionalidades.
 
-Esta primera entrega corresponde a la base arquitectónica del proyecto final de **Backend II**, preparada para incorporar en futuras etapas autenticación, autorización por roles, gestión de eventos, inscripciones, control de cupos y notificaciones.
+El proyecto corresponde a una **Plataforma de Eventos e Inscripciones**, donde los usuarios pueden registrarse, iniciar sesión y consultar su información autenticada mediante **JWT almacenado en una cookie HTTP Only**.
+
+Esta entrega incorpora el sistema de autenticación de usuarios mediante JWT, cookies, middleware de autenticación y logout.
 
 ---
 
 # Tecnologías utilizadas
 
-- Node.js – Entorno de ejecución de JavaScript.
-- Express.js – Framework para el desarrollo de APIs REST.
-- Dotenv – Gestión de variables de entorno.
-- Nodemon – Reinicio automático del servidor durante el desarrollo.
-- JavaScript ES Modules – Sistema de módulos (`import` / `export`).
+- **Node.js** – Entorno de ejecución de JavaScript.
+- **Express.js** – Framework para el desarrollo de APIs REST.
+- **MongoDB** – Base de datos NoSQL.
+- **Mongoose** – ODM para MongoDB.
+- **Dotenv** – Gestión de variables de entorno.
+- **Cookie-parser** – Lectura y gestión de cookies.
+- **JSON Web Token (JWT)** – Autenticación mediante tokens.
+- **Bcrypt** – Hash seguro y comparación de contraseñas.
+- **Nodemon** – Reinicio automático del servidor durante el desarrollo.
+- **JavaScript ES Modules** – Sistema de módulos mediante `import` / `export`.
 
 ---
 
@@ -46,15 +53,21 @@ Ejemplo:
 
 ```env
 PORT=8080
-MONGO_URL=mongodb://localhost:27017/events
+MONGO_URL=tu_url_de_mongodb
+JWT_SECRET=tu_clave_secreta
+JWT_EXPIRES_IN=1h
+NODE_ENV=development
 ```
 
 ### Variables de entorno
 
-| Variable | Descripción |
-|----------|-------------|
-| PORT | Puerto donde se ejecuta el servidor. |
-| MONGO_URL | URL de conexión a MongoDB (implementación futura). |
+| Variable     | Descripción                                             |
+|--------------|---------------------------------------------------------|
+| PORT         | Puerto donde se ejecuta el servidor.                    |
+| MONGO_URL    | URL de conexión a MongoDB (implementación futura).      |
+| JWT_SECRET   | Clave secreta utilizada para firmar y verificar los JWT.|
+|JWT_EXPIRES_IN| Tiempo de expiración del JWT.                           |
+| NODE_ENV     | Entorno de ejecución de la aplicación.                  |
 
 ---
 
@@ -124,9 +137,42 @@ Models (Mongoose)
 MongoDB
 ```
 
-Cada capa posee una responsabilidad específica, permitiendo una mejor organización, mantenimiento y escalabilidad del proyecto.
+---
+# Cada capa posee una responsabilidad específica:
+
+Routes: define los endpoints de la API.
+Middlewares: procesa validaciones y autenticación antes de acceder a determinadas rutas.
+Controllers: recibe las solicitudes HTTP y genera las respuestas.
+Services: contiene la lógica de negocio.
+Repositories: abstrae el acceso a los datos.
+DAO: gestiona las operaciones de persistencia.
+Models: define los esquemas utilizados por Mongoose.
+Utils: contiene funcionalidades reutilizables, como hash de contraseñas y JWT.
+Config: contiene la configuración y conexión con la base de datos.
 
 ---
+
+# Autenticación
+La autenticación se implementa mediante JSON Web Tokens (JWT) almacenados en una cookie HTTP Only denominada:
+```
+currentUser
+```
+# La cookie se configura con:
+```
+httpOnly: true
+sameSite: lax
+maxAge: 3600000
+secure: true únicamente en producción
+```
+
+# El JWT contiene únicamente la información necesaria para identificar al usuario:
+```
+{
+  "id": "665f2a...",
+  "email": "ana@mail.com",
+  "role": "user"
+}
+```
 
 # Endpoints disponibles
 
@@ -185,11 +231,112 @@ Respuesta:
 ```
 ---
 
+## Events - POST
+
+```http
+POST /api/sessions/register
+```
+Registra un nuevo usuario.
+
+Request:
+
+```json
+{
+  "first_name": "Ana",
+  "last_name": "Gómez",
+  "email": "ana@mail.com",
+  "password": "Secreta123",
+  "role": "user"
+}
+```
+Response - 201:
+
+```json
+{
+  "status": "success",
+  "payload": {
+    "id": "665f2a...",
+    "first_name": "Ana",
+    "last_name": "Gómez",
+    "email": "ana@mail.com",
+    "role": "user"
+  }
+}
+```
+La contraseña se almacena mediante bcrypt y no se devuelve en la respuesta.
+
+## Email duplicado — 409
+Response - 409:
+
+```json
+{
+  "status": "error",
+  "message": "Email already in use"
+}
+```
+---
+
+## Login
+
+Request:
+
+```json
+{
+  "email": "ana@mail.com",
+  "password": "Secreta123"
+}
+```
+Response - 200:
+
+```json
+{
+  "status": "success",
+  "message": "Login successful"
+}
+```
+---
+
+## Current
+
+Response - 200:
+
+```json
+{
+  "status": "success",
+  "payload": {
+    "id": "6a74863134fabcebe6a74ad3",
+    "email": "lilu@gmail.com",
+    "role": "user"
+  }
+}
+```
+---
+
+## Logout
+
+Response - 200:
+
+```json
+{
+  "status": "success",
+  "message": "Sesión cerrada"
+}
+```
+---
+
+
+Luego del logout, una solicitud a /api/sessions/current devuelve:
+
+Response — 401
+```json
+{
+  "status": "error",
+  "message": "No autenticado"
+}
+```
+
 # Próximas funcionalidades
 
-- Registro de usuarios.
-- Inicio de sesión.
-- Autenticación mediante JWT.
 - Implementación de Passport.
 - Gestión de roles.
 - CRUD de eventos.
