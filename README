@@ -360,6 +360,13 @@ Response — 401
 ![Endpoint Events POST](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1785178601/postEvents_nctbvp.png)
 ---
 
+## Endpoint Sessions
+
+![Endpoint Sessions-Register POST](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1786210829/login_dexrin.png)
+![Endpoint Sessions-Current GET](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1786210855/current_ppis22.png)
+![Endpoint Sessions-Logout POST](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1786210871/logout_k8ofbi.png)
+---
+
 # Notas
 
 - El proyecto utiliza **ES Modules** (`"type": "module"` en `package.json`).
