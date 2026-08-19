@@ -1,17 +1,17 @@
-import UserDao from '../dao/user.dao.js';
+import User from '../models/userSchema.js';
 
 class UserRepository {
 
     async getUserByEmail(email) {
-        return await UserDao.getUserByEmail(email);
+        return await User.findOne({ email });
     }
 
     async getUserById(id) {
-        return await UserDao.getUserById(id);
+        return await User.findById(id);
     }
 
     async createUser(userData) {
-        return await UserDao.createUser(userData);
+        return await User.create(userData);
     }
 }
 

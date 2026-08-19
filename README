@@ -14,10 +14,13 @@ Esta entrega incorpora el sistema de autenticación de usuarios mediante JWT, co
 - **Express.js** – Framework para el desarrollo de APIs REST.
 - **MongoDB** – Base de datos NoSQL.
 - **Mongoose** – ODM para MongoDB.
-- **Dotenv** – Gestión de variables de entorno.
-- **Cookie-parser** – Lectura y gestión de cookies.
+- **Passport.js** – Middleware de autenticación.
+- **Passport-Local** – Estrategia para registro y autenticación mediante email y contraseña.
+- **Passport-JWT** – Estrategia para validar el JWT almacenado en una cookie.
 - **JSON Web Token (JWT)** – Autenticación mediante tokens.
-- **Bcrypt** – Hash seguro y comparación de contraseñas.
+- **Bcrypt** – Hash y comparación segura de contraseñas.
+- **Cookie-parser** – Lectura y gestión de cookies.
+- **Dotenv** – Gestión de variables de entorno.
 - **Nodemon** – Reinicio automático del servidor durante el desarrollo.
 - **JavaScript ES Modules** – Sistema de módulos mediante `import` / `export`.
 
@@ -88,18 +91,21 @@ El servidor iniciará utilizando el puerto configurado en el archivo `.env`.
 ```text
 
 ├── src/
-│   ├── config/          # Configuración de la aplicación y conexión a la base de datos
-│   ├── controllers/     # Controladores (manejan req y res)
-│   ├── dao/             # Acceso directo a la base de datos (Mongoose)
-│   ├── middlewares/     # Middlewares personalizados
-│   ├── models/          # Esquemas de Mongoose
-│   ├── repositories/    # Intermediarios entre Services y DAO
-│   ├── routes/          # Definición de endpoints
-│   ├── services/        # Lógica de negocio
-│   └── utils/           # Funciones auxiliares
+│   ├── config/
+│   │   ├── passport.config.js   # Configuración y estrategias de Passport
+│   │   └── databese.js          # Configuraciones conexión DB
+│   │
+│   ├── controllers/             # Controladores de la aplicación
+│   ├── dao/                     # Acceso directo a MongoDB mediante Mongoose
+│   ├── middlewares/             # Middlewares personalizados
+│   ├── models/                  # Modelos y esquemas de Mongoose
+│   ├── repositories/            # Abstracción del acceso a datos
+│   ├── routes/                  # Definición de endpoints
+│   ├── services/                # Lógica de negocio
+│   └── utils/                   # Funciones auxiliares
 │
-├── app.js               # Configuración de Express e inicio del servidor
-├── .env.example         # Variables de entorno de ejemplo
+├── app.js                       # Configuración de Express e inicialización de Passport
+├── .env.example                 # Variables de entorno de ejemplo
 ├── .gitignore
 ├── package.json
 ├── package-lock.json
@@ -116,7 +122,7 @@ La aplicación implementa una arquitectura por capas:
 Routes
    │
    ▼
-Middlewares
+Middlewares / Passport
    │
    ▼
 Controllers
@@ -152,10 +158,78 @@ Config: contiene la configuración y conexión con la base de datos.
 
 ---
 
-# Autenticación
-La autenticación se implementa mediante JSON Web Tokens (JWT) almacenados en una cookie HTTP Only denominada:
+# Flujo completo de la autenticación
 ```
-currentUser
+1. Registro
+   │
+   ▼
+POST /api/sessions/register
+   │
+   ▼
+Passport → register
+   │
+   ▼
+Usuario creado
+   │
+   ▼
+2. Login
+   │
+   ▼
+POST /api/sessions/login
+   │
+   ▼
+Passport → login
+   │
+   ▼
+Credenciales válidas
+   │
+   ▼
+Controller genera JWT
+   │
+   ▼
+Cookie currentUser
+   │
+   ▼
+3. Usuario actual
+   │
+   ▼
+GET /api/sessions/current
+   │
+   ▼
+Passport → current
+   │
+   ▼
+JWT válido
+   │
+   ▼
+req.user
+   │
+   ▼
+Datos del usuario
+   │
+   ▼
+4. Logout
+   │
+   ▼
+POST /api/sessions/logout
+   │
+   ▼
+Eliminación de currentUser
+   │
+   ▼
+GET /api/sessions/current
+   │
+   ▼
+401 No autenticado
+```
+
+# Autenticación
+```
+La autenticación de usuarios se encuentra centralizada mediante **Passport.js**, utilizando diferentes estrategias según la operación requerida:
+
+- `register`: registro de nuevos usuarios.
+- `login`: validación de credenciales.
+- `current`: validación del JWT y recuperación del usuario autenticado.
 ```
 # La cookie se configura con:
 ```
@@ -370,5 +444,12 @@ Response — 401
 # Notas
 
 - El proyecto utiliza **ES Modules** (`"type": "module"` en `package.json`).
-- La estructura se encuentra preparada para integrar MongoDB, autenticación y autorización en las próximas entregas.
+- La autenticación se encuentra centralizada mediante Passport.js.
+- Las estrategias register, login y current se encuentran centralizadas en src/config/passport.config.js.
+- Passport se inicializa en app.js mediante passport.initialize().
+- Passport valida las credenciales y el JWT, mientras que el controller es responsable de generar el JWT y establecer la cookie después de un login exitoso.
+- La contraseña nunca se devuelve en las respuestas de la API.
+- El logout elimina la cookie currentUser y no requiere autenticación mediante Passport.
+- La aplicación utiliza una arquitectura por capas para facilitar el mantenimiento y la incorporación de nuevas funcionalidades.
+- La estructura queda preparada para incorporar futuras estrategias de autenticación mediante providers externos, como Google o GitHub, sin modificar app.js.
 - El proyecto sigue una arquitectura por capas para facilitar su evolución durante el curso.

@@ -39,6 +39,7 @@ passport.use('register', new LocalStrategy(
     }
 ));
 
+//Login strategy
 passport.use('login', new LocalStrategy(
     { usernameField: 'email' },
     async (email, password, done) => {
@@ -69,6 +70,7 @@ const cookieExtractor = (req) => {
     return token;
 };
 
+//JWT strategy
 passport.use('current', new JwtStrategy(
     { jwtFromRequest: cookieExtractor, secretOrKey: process.env.JWT_SECRET },
     async (token, done) => {
