@@ -1,17 +1,17 @@
-import User from '../models/userSchema.js';
+import { UserModel } from '../models/userSchema.js';
 
 class UserRepository {
 
     async getUserByEmail(email) {
-        return await User.findOne({ email });
+        return await UserModel.findOne({ email });
     }
 
     async getUserById(id) {
-        return await User.findById(id);
+        return await UserModel.findById(id);
     }
 
     async createUser(userData) {
-        return await User.create(userData);
+        return await UserModel.create(userData);
     }
 }
 
