@@ -12,6 +12,11 @@ const eventSchema = new mongoose.Schema({
     date: {
         type: Date,
         required: true
+    }, 
+    organizer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user',
+        required: true
     }
 },
 {

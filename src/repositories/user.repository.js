@@ -1,8 +1,8 @@
-import { UserModel } from '../models/userSchema.js';
+import {UserModel} from '../models/userSchema.js';
 
 class UserRepository {
 
-    async getUserByEmail(email) {
+    async getUserByEmail({email}) {
         return await UserModel.findOne({ email });
     }
 

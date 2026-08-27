@@ -1,4 +1,5 @@
-import userRepository from '../repositories/user.repository.js';
+import userDao from '../dao/user.dao.js';
+//import userRepository from '../repositories/user.repository.js';
 import { hashPassword } from '../utils/hash.js';
 
 class SessionService {
@@ -20,14 +21,14 @@ class SessionService {
         throw new Error('Password must be at least 6 characters long');
     }
 
-    const existingUser = await userRepository.getUserByEmail(emailNormalized);
+    const existingUser = await userDao.getUserByEmail(emailNormalized);
     if(existingUser) {
         throw new Error('Email already in use');
     }
 
     const hashedPassword = await hashPassword(password);
 
-    const user = await userRepository.createUser({
+    const user = await userDao.createUser({
         first_name,
         last_name,
         email: emailNormalized,
@@ -41,6 +42,36 @@ class SessionService {
         email: user.email,
         role: user.role
     }
+   }
+
+   async registerGithubUser({
+    first_name,
+    last_name,
+    email,
+    providerId
+   }){
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log("2. Email normalizado:", normalizedEmail);
+    //Buscamos el usuario
+    let user = await userDao.getUserByEmail(normalizedEmail);
+     console.log("3. Usuario existente:", user);
+    //si existe lo retorna
+    if(user){
+        return user;
+    }
+
+    //si no existe lo crea
+    user = await userDao.createUser({
+        first_name,
+        last_name,
+        email: normalizedEmail,
+        role: "user",
+        provider: "github",
+        providerId
+    });
+    console.log("4. Usuario creado:", user);
+    
+    return user;
    }
 
 }
