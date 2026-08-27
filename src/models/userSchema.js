@@ -8,8 +8,9 @@ const userSchema = new mongoose.Schema({
     },
     last_name: {
         type: String,
-        required: true,
-        trim:true
+        required: false,
+        trim:true,
+        default: ""
     },
     email: {
         type: String,
@@ -20,13 +21,23 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true
+        required: false,
+        default: null
     },
     role: {
         type: String,
-        enum: ['user', 'admin'],
+        enum: ['admin', 'organizer', 'user'],
         required: true,
         default: 'user'
+    },
+    provider: {
+        type: String,
+        enum: ['local', 'github'],
+        default: 'local'
+    },
+    providerId: {
+        type: String,
+        default: null
     }
 },
 {
