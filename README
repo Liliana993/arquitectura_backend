@@ -17,6 +17,7 @@ Esta entrega incorpora el sistema de autenticación de usuarios mediante JWT, co
 - **Passport.js** – Middleware de autenticación.
 - **Passport-Local** – Estrategia para registro y autenticación mediante email y contraseña.
 - **Passport-JWT** – Estrategia para validar el JWT almacenado en una cookie.
+- **Passport-GitHub2** – Estrategia para autenticación mediante GitHub.
 - **JSON Web Token (JWT)** – Autenticación mediante tokens.
 - **Bcrypt** – Hash y comparación segura de contraseñas.
 - **Cookie-parser** – Lectura y gestión de cookies.
@@ -60,6 +61,9 @@ MONGO_URL=tu_url_de_mongodb
 JWT_SECRET=tu_clave_secreta
 JWT_EXPIRES_IN=1h
 NODE_ENV=development
+GITHUB_CLIENT_ID=tu_github_client_id
+GITHUB_CLIENT_SECRET=tu_github_client_secret
+GITHUB_CALLBACK_URL=http://localhost:3000/api/sessions/github/callback
 ```
 
 ### Variables de entorno
@@ -71,6 +75,10 @@ NODE_ENV=development
 | JWT_SECRET   | Clave secreta utilizada para firmar y verificar los JWT.|
 |JWT_EXPIRES_IN| Tiempo de expiración del JWT.                           |
 | NODE_ENV     | Entorno de ejecución de la aplicación.                  |
+|GITHUB_CLIENT_ID| Client ID de la aplicación OAuth de GitHub.           |
+|GITHUB_CLIENT_SECRET| Client Secret de la aplicación OAuth de GitHub.   |
+|GITHUB_CALLBACK_URL | URL utilizada por GitHub para devolver el         |
+|                    |  resultado de la autenticación.                   |
 
 ---
 
@@ -96,8 +104,11 @@ El servidor iniciará utilizando el puerto configurado en el archivo `.env`.
 │   │   └── databese.js          # Configuraciones conexión DB
 │   │
 │   ├── controllers/             # Controladores de la aplicación
-│   ├── dao/                     # Acceso directo a MongoDB mediante Mongoose
+│   ├── dao/                     # Acceso a datos mediante repositories
 │   ├── middlewares/             # Middlewares personalizados
+|   |  ├── auth.middleware.js       # Autenticación mediante JWT
+│   │  └── authorize.middleware.js  # Autorización por roles
+|   |
 │   ├── models/                  # Modelos y esquemas de Mongoose
 │   ├── repositories/            # Abstracción del acceso a datos
 │   ├── routes/                  # Definición de endpoints
@@ -229,6 +240,7 @@ La autenticación de usuarios se encuentra centralizada mediante **Passport.js**
 
 - `register`: registro de nuevos usuarios.
 - `login`: validación de credenciales.
+- `github: autenticación mediante GitHub.`
 - `current`: validación del JWT y recuperación del usuario autenticado.
 ```
 # La cookie se configura con:
@@ -248,26 +260,45 @@ secure: true únicamente en producción
 }
 ```
 
+# Role
+El modelo utiliza 3 roles
+````
+user
+organizer
+admin
+```
+
+# Middlewares de autenticación y autorización
+```text
+El sistema utiliza dos middlewares separados.
+
+Authentication Middleware
+
+auth.middleware.js
+
+Su responsabilidad es comprobar que exista una sesión válida mediante el JWT almacenado en la cookie.
+
+El middleware:
+
+Obtiene el JWT desde la cookie currentUser.
+Verifica el token.
+Obtiene la información del usuario.
+Población req.user.
+Permite continuar con la solicitud.
+
+Si no existe una sesión válida, responde:
+```
+
+```
+401 Unauthorized
+
+Si el usuario está autenticado pero no posee el rol necesario, responde:
+
+403 Forbidden
+```
+
 # Endpoints disponibles
 
-## Eventos - GET
-
-```http
-GET /api/events/health
-```
-
-Obtiene el listado inicial de eventos.
-
-Respuesta:
-
-```json
-{
-  "status": "ok",
-  "message": "API corriendo con éxito!"
-}
-```
-
----
 
 ## Events - GET
 
@@ -275,14 +306,21 @@ Respuesta:
 GET /api/events
 ```
 
-Obtiene el listado inicial de eventos.
+Obtiene el listado inicial de eventos. Ruta de acceso público.
 
 Respuesta:
 
 ```json
 {
   "status": "success",
-  "payload": []
+  "payload": [
+    {
+      "_id": "6690...",
+      "title": "Congreso Tech 2026",
+      "description": "Evento sobre tecnología",
+      "date": "2026-09-15T18:00:00.000Z"
+    }
+  ]
 }
 ```
 
@@ -293,14 +331,18 @@ Respuesta:
 ```http
 POST /api/events
 ```
-Crea un nuevo evento.
+Crea un nuevo evento. Ruta protegida. El endpoint requiere autenticación y autorización mediante roles. Solamente Admin o Organizer pueden crear eventos.
 
 Respuesta:
 
 ```json
 {
   "status": "success",
-  "messages": "Evento creado con éxito!"
+  "payload": {
+    "id": "6690...",
+    "title": "Congreso Tech 2026",
+    "organizer": "665f2a..."
+  }
 }
 ```
 ---
@@ -370,6 +412,26 @@ Response - 200:
 ```
 ---
 
+## Login con GitHub
+
+Request: GET /api/sessions/github
+
+```
+La autenticación se realiza mediante GitHub utilizando Passport.
+```
+Callback:
+
+```
+GET /api/sessions/github/callback
+```
+```json
+{
+  "status": "success",
+  "message": "Login with GitHub successful"
+}
+```
+---
+
 ## Current
 
 Response - 200:
@@ -409,9 +471,19 @@ Response — 401
 }
 ```
 
+# Protección de rutas
+Las rutas protegidas combinan autenticación y autorización según sea necesario.
+```text
+router.post(
+  '/',
+  passport.authenticate('current', { session: false }),
+  authorizeRoles('organizer', 'admin'),
+  createEvent
+);
+```
+
 # Próximas funcionalidades
 
-- Implementación de Passport.
 - Gestión de roles.
 - CRUD de eventos.
 - Inscripción de usuarios.
@@ -430,14 +502,16 @@ Response — 401
 
 ## Endpoint Events
 
-![Endpoint Events GET](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1784654231/rutaEvent_apyvgn.png)
-![Endpoint Events POST](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1785178601/postEvents_nctbvp.png)
+![Endpoint Events GET](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1787837180/getEvents_kxfgzi.png)
+![Endpoint Events POST](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1787837155/postEvento_zevucf.png)
 ---
 
 ## Endpoint Sessions
 
 ![Endpoint Sessions-Register POST](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1786210829/login_dexrin.png)
 ![Endpoint Sessions-Current GET](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1786210855/current_ppis22.png)
+![Endpoint Sessions-Login POST](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1786210829/login_dexrin.png)
+![Endpoint Sessions-Login-GitHub POST](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1787837187/loginGitHub_wgcld2.png)
 ![Endpoint Sessions-Logout POST](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1786210871/logout_k8ofbi.png)
 ---
 
