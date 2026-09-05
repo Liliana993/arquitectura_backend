@@ -482,10 +482,42 @@ router.post(
 );
 ```
 
+### 📌 Rutas de Eventos
+
+| Método | Ruta | Acceso | Descripción |
+|---|---|---|---|
+| `GET` | `/api/events/health` | Público | Verifica que la API de eventos esté funcionando. |
+| `GET` | `/api/events` | Público | Obtiene el listado de eventos. |
+| `GET` | `/api/events/:id` | Público | Obtiene un evento específico por su ID. |
+| `POST` | `/api/events` | `organizer`, `admin` | Crea un nuevo evento. |
+| `PUT` | `/api/events/:id` | `organizer`, `admin` | Actualiza los datos de un evento. |
+| `PATCH` | `/api/events/:id/status` | `organizer`, `admin` | Cambia el estado de un evento. |
+
+### 🔐 Roles y permisos
+
+La API utiliza autenticación mediante Passport y autorización basada en roles.
+
+Existen tres roles:
+
+- **`user`**: usuario común.
+- **`organizer`**: puede crear y gestionar sus propios eventos.
+- **`admin`**: tiene permisos administrativos y puede gestionar cualquier evento.
+
+#### Matriz de permisos
+
+| Acción | Público | `user` | `organizer` | `admin` |
+|---|:---:|:---:|:---:|:---:|
+| Consultar eventos | ✅ | ✅ | ✅ | ✅ |
+| Consultar evento por ID | ✅ | ✅ | ✅ | ✅ |
+| Crear evento | ❌ | ❌ | ✅ | ✅ |
+| Actualizar evento | ❌ | ❌ | ✅* | ✅ |
+| Cambiar estado | ❌ | ❌ | ✅* | ✅ |
+
+> **\*** El `organizer` solamente puede modificar o cambiar el estado de eventos de los cuales es propietario.
+
+
 # Próximas funcionalidades
 
-- Gestión de roles.
-- CRUD de eventos.
 - Inscripción de usuarios.
 - Control de cupos.
 - Notificaciones.
