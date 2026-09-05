@@ -61,22 +61,11 @@ passport.use('login', new LocalStrategy(
             }
             return done(null, user);
         } catch (error) {
-            console.error('❌ Error en login strategy:', error);
+           //console.error('❌ Error en login strategy:', error);
             return done(error);
         }
     }
 ));
-
-/*
-console.log("GitHub Client ID:", process.env.GITHUB_CLIENT_ID);
-console.log(
-    "GitHub Client Secret:",
-    process.env.GITHUB_CLIENT_SECRET ? "CARGADO ✅" : "NO CARGADO ❌"
-);
-console.log(
-    "GitHub Callback:",
-    process.env.GITHUB_CALLBACK_URL
-);*/
 
 //GitHub strategy
 passport.use('github', new GitHubStrategy(
@@ -88,7 +77,7 @@ passport.use('github', new GitHubStrategy(
     },
     async (accessToken, refreshToken, profile, done) => {
         try {
-            console.log("GitHub profile:", profile);
+            //console.log("GitHub profile:", profile);
 
             const email = profile.emails[0].value.toLowerCase().trim();
             
@@ -118,7 +107,7 @@ passport.use('github', new GitHubStrategy(
                 user);
 
         } catch (error) {
-             console.error("Error GitHub:", error);
+             //console.error("Error GitHub:", error);
             return done(error);
         }
     }

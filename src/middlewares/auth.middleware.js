@@ -22,7 +22,7 @@ export const authMiddleware = (req, res, next) => {
         return next();
 
     } catch (error) {
-        console.error("ERROR JWT:", error);
+        //console.error("ERROR JWT:", error);
 
         return res.status(401).json({
             status: "error",

@@ -51,10 +51,10 @@ class SessionService {
     providerId
    }){
     const normalizedEmail = email.trim().toLowerCase();
-    console.log("2. Email normalizado:", normalizedEmail);
+    //console.log("2. Email normalizado:", normalizedEmail);
     //Buscamos el usuario
     let user = await userDao.getUserByEmail(normalizedEmail);
-     console.log("3. Usuario existente:", user);
+     //console.log("3. Usuario existente:", user);
     //si existe lo retorna
     if(user){
         return user;
@@ -69,7 +69,7 @@ class SessionService {
         provider: "github",
         providerId
     });
-    console.log("4. Usuario creado:", user);
+    //console.log("4. Usuario creado:", user);
     
     return user;
    }

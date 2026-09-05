@@ -26,7 +26,7 @@ export const loginUser = async (req, res) => {
         const user = req.user;
 
         const token = generateToken(user);
-        console.log('✅ JWT generado');
+        //console.log('✅ JWT generado');
 
         res.cookie('currentUser', token, {
             httpOnly: true,
@@ -41,7 +41,7 @@ export const loginUser = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ ERROR EN LOGIN CONTROLLER:', error);
+        //console.error('❌ ERROR EN LOGIN CONTROLLER:', error);
         return res.status(500).json({
             status: 'error',
             message: 'Internal server error'
@@ -52,11 +52,11 @@ export const loginUser = async (req, res) => {
 //endpoint login with GitHub
 export const gitHubCallback = async (req, res) => {
     try {
-        console.log("GitHub req.user:", req.user);
+        //console.log("GitHub req.user:", req.user);
 
         const token = generateToken(req.user);
 
-        console.log("JWT generado correctamente");
+        //console.log("JWT generado correctamente");
 
         res.cookie('currentUser', token, {
             httpOnly: true,
@@ -70,7 +70,7 @@ export const gitHubCallback = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("❌ ERROR EN GITHUB CALLBACK:", error);
+        //console.error("❌ ERROR EN GITHUB CALLBACK:", error);
 
         return res.status(500).json({
             status: 'error',

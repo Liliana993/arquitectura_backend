@@ -1,4 +1,6 @@
-import { EventModel } from '../models/eventSchema.js';
+import { EventService } from '../services/event.service.js';
+
+const eventService = new EventService();
 
 // Health Check => para verificar que la API esté corriendo correctamente
 export const healthCheck = (req, res) => {
@@ -15,10 +17,10 @@ export const healthCheck = (req, res) => {
 }
 
 // Events => traer todos los eventos
-export const getEvents = async (req, res) => {
+export const getEvents = async (req, res, next) => {
     try {
 
-        const events = await EventModel.find();
+        const events = await eventService.getEvents(req.query);
 
         return res.status(200).json({
             status: "success",
@@ -27,42 +29,81 @@ export const getEvents = async (req, res) => {
 
     } catch (error) {
 
-        console.error("❌ Error al obtener los eventos:", error);
+        next(error);
+    }
+};
 
-        return res.status(500).json({
-            status: "error",
-            message: "Error al obtener los eventos."
+//Event by ID => traer un evento por su ID
+export const getEventById = async (req, res, next) => {
+    try {
+        const event = await eventService.getEventById(req.params.id);
+
+        return res.status(200).json({
+            status: "success",
+            payload: event
         });
+    } catch (error) {
+        next(error);
     }
 };
 
 // Create Event => crear un nuevo evento sin persistencia en la base de datos aún.
-export const createEvent = async (req, res) => {
+export const createEvent = async (req, res, next) => {
     try {
-        const { title, description, date } = req.body;
+        const event = await eventService.createEvent(req.body, req.user);
 
-        const event = await EventModel.create({
-            title,
-            description,
-            date,
-            organizer: req.user._id
-        });
-
-        return res.status(201).json({
+        res.status(201).json({
             status: 'success',
-            payload: {
-                id: event._id,
-                title: event.title,
-                organizer: event.organizer
-            }
+            message: 'Evento creado con éxito',
+            payload: event
         });
 
     } catch (error) {
-        console.error('❌ Error creating event:', error);
-
-        return res.status(500).json({
-            status: 'error',
-            message: 'Internal server error'
-        });
+       next(error);
     }
+};
+
+export const updateEvent = async (req, res, next) => {
+  try {
+    const event = await eventService.updateEvent(
+      req.params.id,
+      req.body,
+      req.user
+    );
+
+    res.json({
+      status: "success",
+      message: "Evento actualizado",
+      data: event
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changeEventStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({
+        status: "error",
+        message: "El campo status es obligatorio"
+      });
+    }
+
+    const event = await eventService.changeStatus(
+      req.params.id,
+      status,
+      req.user
+    );
+
+    res.json({
+      status: "success",
+      message: "Estado del evento actualizado",
+      data: event
+    });
+  } catch (error) {
+    next(error);
+  }
 };
