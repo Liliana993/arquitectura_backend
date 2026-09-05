@@ -68,7 +68,7 @@ GITHUB_CALLBACK_URL=http://localhost:3000/api/sessions/github/callback
 
 ### Variables de entorno
 
-| Variable     | Descripción                                             |
+| Variable     | Descripcion                                             |
 |--------------|---------------------------------------------------------|
 | PORT         | Puerto donde se ejecuta el servidor.                    |
 | MONGO_URL    | URL de conexión a MongoDB (implementación futura).      |

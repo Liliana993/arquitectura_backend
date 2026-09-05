@@ -4,7 +4,6 @@ import passport from 'passport';
 import cookieParser from 'cookie-parser';
 import eventRouter from './src/routes/events.routes.js';
 import sessionRouter from './src/routes/sessions.routes.js';
-//import { config } from './src/config/config.js';
 import { connectDB } from './src/config/database.js';
 import './src/config/passport.config.js';
 
@@ -19,6 +18,17 @@ connectDB();
 
 app.use('/api/events', eventRouter);
 app.use('/api/sessions', sessionRouter);
+
+app.use((err, req, res, next) => {
+  console.error(err);
+
+  const status = err.status || 500;
+
+  res.status(status).json({
+    status: "error",
+    message: err.message || "Error interno del servidor"
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
