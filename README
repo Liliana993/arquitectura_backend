@@ -516,6 +516,24 @@ Existen tres roles:
 > **\*** El `organizer` solamente puede modificar o cambiar el estado de eventos de los cuales es propietario.
 
 
+# Tickets
+```text
+Creación de tickets asociados a eventos.
+Consulta de todos los tickets.
+Consulta de tickets del usuario autenticado.
+Consulta de un ticket por ID.
+Cancelación de tickets.
+Control de disponibilidad según la capacidad del evento.
+Validación de cantidad de entradas.
+Validación de eventos publicados y vigentes.
+Generación automática de código único de ticket.
+Control de permisos para modificar tickets.
+Filtros por estado.
+Paginación y ordenamiento.
+Envío de email de confirmación al crear un ticket.
+```
+
+
 # Próximas funcionalidades
 
 - Inscripción de usuarios.
