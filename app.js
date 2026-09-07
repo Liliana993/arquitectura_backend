@@ -4,6 +4,7 @@ import passport from 'passport';
 import cookieParser from 'cookie-parser';
 import eventRouter from './src/routes/events.routes.js';
 import sessionRouter from './src/routes/sessions.routes.js';
+import ticketRouter from './src/routes/tickets.routes.js';
 import { connectDB } from './src/config/database.js';
 import './src/config/passport.config.js';
 
@@ -18,6 +19,7 @@ connectDB();
 
 app.use('/api/events', eventRouter);
 app.use('/api/sessions', sessionRouter);
+app.use('/api/tickets', ticketRouter);
 
 app.use((err, req, res, next) => {
   console.error(err);

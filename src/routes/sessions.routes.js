@@ -3,7 +3,7 @@ import passport from 'passport';
 
 import {registerUser, loginUser, getCurrentUser, logoutUser} from '../controllers/sessions.controller.js';
 import { gitHubCallback } from '../controllers/sessions.controller.js';
-import { authorizeRoles } from '../middlewares/authorize.middleware.js';
+//import { authorizeRoles } from '../middlewares/authorize.middleware.js';
 
 
 const router = Router();
