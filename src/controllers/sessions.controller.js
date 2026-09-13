@@ -1,26 +1,21 @@
-import sessionService from '../services/sessions.service.js';
+//import sessionService from '../services/sessions.service.js';
 import { generateToken } from '../utils/jwt.js';
-import { comparePassword } from '../utils/hash.js';
-import {UserModel} from '../models/userSchema.js';
 import { CurrentUserDTO } from '../dto/current.user.dto.js';
+import {UserDTO} from '../dto/user.dto.js';
 
 //Endpoint for user registration
 export const registerUser = async (req, res) => {
+    const userDTO = new UserDTO(req.user);
     return res.status(201).json({
         status: 'success',
         message: 'User registered successfully',
-        payload: {
-            id: req.user._id,
-            first_name: req.user.first_name,
-            last_name: req.user.last_name,
-            email: req.user.email,
-            role: req.user.role
-        }
+        payload: userDTO
     });
 };
 
+
 // Endpoint for user login
-export const loginUser = async (req, res) => {
+export const loginUser = async (req, res, next) => {
      try {
        
         const user = req.user;
@@ -42,15 +37,12 @@ export const loginUser = async (req, res) => {
 
     } catch (error) {
         //console.error('❌ ERROR EN LOGIN CONTROLLER:', error);
-        return res.status(500).json({
-            status: 'error',
-            message: 'Internal server error'
-        });
+        return next(error);
     }
 };
 
 //endpoint login with GitHub
-export const gitHubCallback = async (req, res) => {
+export const gitHubCallback = async (req, res, next) => {
     try {
         //console.log("GitHub req.user:", req.user);
 
@@ -71,17 +63,13 @@ export const gitHubCallback = async (req, res) => {
 
     } catch (error) {
         //console.error("❌ ERROR EN GITHUB CALLBACK:", error);
-
-        return res.status(500).json({
-            status: 'error',
-            message: error.message
-        });
+        return next(error);
     }
 };
 
 
 // Current
-export const getCurrentUser = async (req, res) => {
+export const getCurrentUser = async (req, res, next) => {
     try {
         const userDTO = new CurrentUserDTO(req.user);
         return res.status(200).json({
@@ -91,16 +79,13 @@ export const getCurrentUser = async (req, res) => {
 
     } catch (error) {
 
-        return res.status(500).json({
-            status: 'error',
-            message: 'Internal server error'
-        });
+        return next(error);
     }
 };
 
 
 // Logout
-export const logoutUser = async (req, res) => {
+export const logoutUser = async (req, res, next) => {
     try {
 
         res.clearCookie('currentUser');
@@ -111,10 +96,6 @@ export const logoutUser = async (req, res) => {
         });
 
     } catch (error) {
-
-        return res.status(500).json({
-            status: 'error',
-            message: 'Internal server error'
-        });
+        return next(error);
     }
 };

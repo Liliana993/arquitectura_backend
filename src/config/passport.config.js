@@ -2,7 +2,8 @@ import passport from 'passport';
 import { Strategy as JwtStrategy } from 'passport-jwt';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { Strategy as GitHubStrategy } from 'passport-github2';
-import userDao from '../dao/user.dao.js';
+//import userDao from '../dao/user.dao.js';
+import UserRepository from '../repositories/user.repository.js';
 import {comparePassword} from '../utils/hash.js';
 import sessionsService from '../services/sessions.service.js';
 
@@ -51,7 +52,7 @@ passport.use('login', new LocalStrategy(
         try {
             const normalizedEmail = email.toLowerCase().trim();
             
-            const user = await userDao.getUserByEmail(normalizedEmail);
+            const user = await UserRepository.getUserByEmail(normalizedEmail);
             if (!user) {
                 return done(null, false, { message: 'Invalid credentials' });
             }
@@ -128,7 +129,7 @@ passport.use('current', new JwtStrategy(
     { jwtFromRequest: cookieExtractor, secretOrKey: process.env.JWT_SECRET },
     async (token, done) => {
         try {
-            const user = await userDao.getUserById(token.id);
+            const user = await UserRepository.getUserById(token.id);
             if (!user) {
                 return done(null, false);
             }

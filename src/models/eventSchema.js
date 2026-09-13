@@ -9,6 +9,16 @@ const eventSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+     category: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    location: {
+      type: String,
+      required: true,
+      trim: true
+    },
     date: {
         type: Date,
         required: true

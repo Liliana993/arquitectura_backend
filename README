@@ -64,6 +64,13 @@ NODE_ENV=development
 GITHUB_CLIENT_ID=tu_github_client_id
 GITHUB_CLIENT_SECRET=tu_github_client_secret
 GITHUB_CALLBACK_URL=http://localhost:3000/api/sessions/github/callback
+
+# PARA NODEMAILER
+MAIL_HOST=
+MAIL_PORT=
+MAIL_USER=
+MAIL_PASS=
+MAIL_FROM=
 ```
 
 ### Variables de entorno
@@ -102,10 +109,17 @@ El servidor iniciará utilizando el puerto configurado en el archivo `.env`.
 │   ├── config/
 │   │   ├── passport.config.js   # Configuración y estrategias de Passport
 │   │   └── databese.js          # Configuraciones conexión DB
+|   |   ├──nodemailer.js         # Envío automático de correo despues de la reserva.
 │   │
 │   ├── controllers/             # Controladores de la aplicación
 │   ├── dao/                     # Acceso a datos mediante repositories
-│   ├── middlewares/             # Middlewares personalizados
+|   ├── dto/                     # Controlar y transformar la información antes de enviar.
+│   │    ├── user.dto.js 
+│   |    ├── current.user.dto.js 
+|   |    ├── event.dto.js 
+│   |    └── ticket.dto.js  
+│   |
+│   ├── middlewares/                # Middlewares personalizados
 |   |  ├── auth.middleware.js       # Autenticación mediante JWT
 │   │  └── authorize.middleware.js  # Autorización por roles
 |   |
@@ -123,12 +137,9 @@ El servidor iniciará utilizando el puerto configurado en el archivo `.env`.
 └── README.md
 ```
 
-# Arquitectura
+# 🏗️ Arquitectura
 
-La aplicación implementa una arquitectura por capas:
-
-## Arquitectura por capas
-
+La aplicación implementa una arquitectura por capas para separar responsabilidades y facilitar el mantenimiento y la escalabilidad.
 ```text
 Routes
    │
@@ -154,218 +165,207 @@ Models (Mongoose)
 MongoDB
 ```
 
----
-# Cada capa posee una responsabilidad específica:
-
-Routes: define los endpoints de la API.
-Middlewares: procesa validaciones y autenticación antes de acceder a determinadas rutas.
-Controllers: recibe las solicitudes HTTP y genera las respuestas.
-Services: contiene la lógica de negocio.
-Repositories: abstrae el acceso a los datos.
-DAO: gestiona las operaciones de persistencia.
-Models: define los esquemas utilizados por Mongoose.
-Utils: contiene funcionalidades reutilizables, como hash de contraseñas y JWT.
-Config: contiene la configuración y conexión con la base de datos.
-
----
-
-# Flujo completo de la autenticación
-```
-1. Registro
-   │
-   ▼
-POST /api/sessions/register
-   │
-   ▼
-Passport → register
-   │
-   ▼
-Usuario creado
-   │
-   ▼
-2. Login
-   │
-   ▼
-POST /api/sessions/login
-   │
-   ▼
-Passport → login
-   │
-   ▼
-Credenciales válidas
-   │
-   ▼
-Controller genera JWT
-   │
-   ▼
-Cookie currentUser
-   │
-   ▼
-3. Usuario actual
-   │
-   ▼
-GET /api/sessions/current
-   │
-   ▼
-Passport → current
-   │
-   ▼
-JWT válido
-   │
-   ▼
-req.user
-   │
-   ▼
-Datos del usuario
-   │
-   ▼
-4. Logout
-   │
-   ▼
-POST /api/sessions/logout
-   │
-   ▼
-Eliminación de currentUser
-   │
-   ▼
-GET /api/sessions/current
-   │
-   ▼
-401 No autenticado
-```
-
-# Autenticación
-```
-La autenticación de usuarios se encuentra centralizada mediante **Passport.js**, utilizando diferentes estrategias según la operación requerida:
-
-- `register`: registro de nuevos usuarios.
-- `login`: validación de credenciales.
-- `github: autenticación mediante GitHub.`
-- `current`: validación del JWT y recuperación del usuario autenticado.
-```
-# La cookie se configura con:
-```
-httpOnly: true
-sameSite: lax
-maxAge: 3600000
-secure: true únicamente en producción
-```
-
-# El JWT contiene únicamente la información necesaria para identificar al usuario:
-```
-{
-  "id": "665f2a...",
-  "email": "ana@mail.com",
-  "role": "user"
-}
-```
-
-# Role
-El modelo utiliza 3 roles
-````
-user
-organizer
-admin
-```
-
-# Middlewares de autenticación y autorización
+## Responsabilidad de cada capa
 ```text
-El sistema utiliza dos middlewares separados.
+Routes
 
-Authentication Middleware
+Define los endpoints disponibles y determina qué middlewares deben ejecutarse antes de llegar al controller.
 
-auth.middleware.js
+Middlewares
 
-Su responsabilidad es comprobar que exista una sesión válida mediante el JWT almacenado en la cookie.
+Gestiona autenticación, autorización y manejo centralizado de errores.
 
-El middleware:
+Controllers
 
-Obtiene el JWT desde la cookie currentUser.
-Verifica el token.
-Obtiene la información del usuario.
-Población req.user.
-Permite continuar con la solicitud.
+Recibe las solicitudes HTTP, utiliza los Services y construye las respuestas HTTP.
 
-Si no existe una sesión válida, responde:
-```
+Los Controllers no contienen lógica de negocio ni acceden directamente a los Models.
 
-```
-401 Unauthorized
+Services
 
-Si el usuario está autenticado pero no posee el rol necesario, responde:
+Contiene la lógica de negocio de la aplicación.
 
-403 Forbidden
+Entre sus responsabilidades se encuentran:
+
+Validaciones.
+Reglas de negocio.
+Control de estados.
+Control de capacidad de eventos.
+Validación de permisos.
+Gestión de tickets.
+Comunicación con los repositories.
+Repositories
+
+Representa una abstracción orientada al dominio sobre el acceso a datos.
+
+Los repositories utilizan los DAO y no acceden directamente a los Models.
+
+Ejemplos:
+
+findByEmail
+findPublishedEvents
+countActiveTickets
+cancelTicket
+DAO
+
+Es la capa responsable del acceso directo a MongoDB mediante Mongoose.
+
+Cada entidad posee su propio DAO:
+
+UserDAO
+EventDAO
+TicketDAO
+
+Los DAO son los únicos componentes que acceden directamente a los Models.
+
+Models
+
+Define los esquemas y modelos de Mongoose utilizados para persistir la información.
+
+DTO
+
+Los DTO permiten controlar y transformar la información antes de enviarla al cliente.
+
+Se utilizan para evitar exponer información sensible, como las contraseñas de los usuarios.
+
+DTOs implementados:
+
+UserDTO
+CurrentUserDTO
+EventDTO
+TicketDTO
+
 ```
 
 # Endpoints disponibles
 
+La API se encuentra organizada en tres grupos principales:
 
-## Events - GET
-
-```http
-GET /api/events
-```
-
-Obtiene el listado inicial de eventos. Ruta de acceso público.
-
-Respuesta:
-
-```json
-{
-  "status": "success",
-  "payload": [
-    {
-      "_id": "6690...",
-      "title": "Congreso Tech 2026",
-      "description": "Evento sobre tecnología",
-      "date": "2026-09-15T18:00:00.000Z"
-    }
-  ]
-}
-```
+* `/api/sessions` → autenticación y sesiones.
+* `/api/events` → gestión de eventos.
+* `/api/tickets` → gestión de tickets e inscripciones.
 
 ---
 
-## Events - POST
+# 👤 Sessions
 
-```http
-POST /api/events
-```
-Crea un nuevo evento. Ruta protegida. El endpoint requiere autenticación y autorización mediante roles. Solamente Admin o Organizer pueden crear eventos.
-
-Respuesta:
-
-```json
-{
-  "status": "success",
-  "payload": {
-    "id": "6690...",
-    "title": "Congreso Tech 2026",
-    "organizer": "665f2a..."
-  }
-}
-```
----
-
-## Events - POST
+## Registrar usuario
 
 ```http
 POST /api/sessions/register
 ```
-Registra un nuevo usuario.
 
-Request:
+**Acceso:** Público.
+
+Registra un nuevo usuario mediante Passport Local.
+
+### Request
 
 ```json
 {
   "first_name": "Ana",
   "last_name": "Gómez",
   "email": "ana@mail.com",
-  "password": "Secreta123",
-  "role": "user"
+  "password": "Secreta123"
 }
 ```
-Response - 201:
+
+### Response — 201
+
+```json
+{
+  "status": "success",
+  "message": "User registered successfully",
+  "payload": {
+    "id": "665f2a...",
+    "first_name": "Ana",
+    "last_name": "Gómez",
+    "email": "ana@mail.com",
+    "role": "user"
+  }
+}
+```
+
+La contraseña se almacena mediante bcrypt y no se devuelve en la respuesta.
+
+---
+
+## Login
+
+```http
+POST /api/sessions/login
+```
+
+**Acceso:** Público.
+
+Autentica al usuario mediante email y contraseña.
+
+### Request
+
+```json
+{
+  "email": "ana@mail.com",
+  "password": "Secreta123"
+}
+```
+
+### Response — 200
+
+```json
+{
+  "status": "success",
+  "message": "Login successful"
+}
+```
+
+Luego de un login exitoso se genera un JWT y se almacena en la cookie HTTP Only:
+
+```text
+currentUser
+```
+
+---
+
+## Login con GitHub
+
+```http
+GET /api/sessions/github
+```
+
+**Acceso:** Público.
+
+Inicia el flujo de autenticación mediante GitHub.
+
+### Callback
+
+```http
+GET /api/sessions/github/callback
+```
+
+Luego de una autenticación exitosa se genera el JWT y se establece la cookie `currentUser`.
+
+### Response
+
+```json
+{
+  "status": "success",
+  "message": "Login with GitHub successful"
+}
+```
+
+---
+
+## Usuario actual
+
+```http
+GET /api/sessions/current
+```
+
+**Acceso:** Requiere autenticación.
+
+Valida el JWT almacenado en la cookie `currentUser` y devuelve la información del usuario autenticado.
+
+### Response — 200
 
 ```json
 {
@@ -379,78 +379,22 @@ Response - 201:
   }
 }
 ```
-La contraseña se almacena mediante bcrypt y no se devuelve en la respuesta.
 
-## Email duplicado — 409
-Response - 409:
+El `CurrentUserDTO` evita exponer la contraseña.
 
-```json
-{
-  "status": "error",
-  "message": "Email already in use"
-}
-```
----
-
-## Login
-
-Request:
-
-```json
-{
-  "email": "ana@mail.com",
-  "password": "Secreta123"
-}
-```
-Response - 200:
-
-```json
-{
-  "status": "success",
-  "message": "Login successful"
-}
-```
----
-
-## Login con GitHub
-
-Request: GET /api/sessions/github
-
-```
-La autenticación se realiza mediante GitHub utilizando Passport.
-```
-Callback:
-
-```
-GET /api/sessions/github/callback
-```
-```json
-{
-  "status": "success",
-  "message": "Login with GitHub successful"
-}
-```
----
-
-## Current
-
-Response - 200:
-
-```json
-{
-  "status": "success",
-  "payload": {
-    "id": "6a74863134fabcebe6a74ad3",
-    "email": "lilu@gmail.com",
-    "role": "user"
-  }
-}
-```
 ---
 
 ## Logout
 
-Response - 200:
+```http
+POST /api/sessions/logout
+```
+
+**Acceso:** Público.
+
+Elimina la cookie `currentUser`.
+
+### Response — 200
 
 ```json
 {
@@ -458,12 +402,15 @@ Response - 200:
   "message": "Sesión cerrada"
 }
 ```
----
 
+Luego del logout, una solicitud a:
 
-Luego del logout, una solicitud a /api/sessions/current devuelve:
+```http
+GET /api/sessions/current
+```
 
-Response — 401
+devuelve:
+
 ```json
 {
   "status": "error",
@@ -471,74 +418,513 @@ Response — 401
 }
 ```
 
-# Protección de rutas
-Las rutas protegidas combinan autenticación y autorización según sea necesario.
-```text
-router.post(
-  '/',
-  passport.authenticate('current', { session: false }),
-  authorizeRoles('organizer', 'admin'),
-  createEvent
-);
+con código HTTP `401 Unauthorized`.
+
+---
+
+# 📅 Events
+
+## Health Check
+
+```http
+GET /api/events/health
 ```
 
-### 📌 Rutas de Eventos
+**Acceso:** Público.
 
-| Método | Ruta | Acceso | Descripción |
-|---|---|---|---|
-| `GET` | `/api/events/health` | Público | Verifica que la API de eventos esté funcionando. |
-| `GET` | `/api/events` | Público | Obtiene el listado de eventos. |
-| `GET` | `/api/events/:id` | Público | Obtiene un evento específico por su ID. |
-| `POST` | `/api/events` | `organizer`, `admin` | Crea un nuevo evento. |
-| `PUT` | `/api/events/:id` | `organizer`, `admin` | Actualiza los datos de un evento. |
-| `PATCH` | `/api/events/:id/status` | `organizer`, `admin` | Cambia el estado de un evento. |
+Verifica que la API de eventos se encuentre funcionando correctamente.
 
-### 🔐 Roles y permisos
+---
 
-La API utiliza autenticación mediante Passport y autorización basada en roles.
+## Listar eventos
 
-Existen tres roles:
-
-- **`user`**: usuario común.
-- **`organizer`**: puede crear y gestionar sus propios eventos.
-- **`admin`**: tiene permisos administrativos y puede gestionar cualquier evento.
-
-#### Matriz de permisos
-
-| Acción | Público | `user` | `organizer` | `admin` |
-|---|:---:|:---:|:---:|:---:|
-| Consultar eventos | ✅ | ✅ | ✅ | ✅ |
-| Consultar evento por ID | ✅ | ✅ | ✅ | ✅ |
-| Crear evento | ❌ | ❌ | ✅ | ✅ |
-| Actualizar evento | ❌ | ❌ | ✅* | ✅ |
-| Cambiar estado | ❌ | ❌ | ✅* | ✅ |
-
-> **\*** El `organizer` solamente puede modificar o cambiar el estado de eventos de los cuales es propietario.
-
-
-# Tickets
-```text
-Creación de tickets asociados a eventos.
-Consulta de todos los tickets.
-Consulta de tickets del usuario autenticado.
-Consulta de un ticket por ID.
-Cancelación de tickets.
-Control de disponibilidad según la capacidad del evento.
-Validación de cantidad de entradas.
-Validación de eventos publicados y vigentes.
-Generación automática de código único de ticket.
-Control de permisos para modificar tickets.
-Filtros por estado.
-Paginación y ordenamiento.
-Envío de email de confirmación al crear un ticket.
+```http
+GET /api/events
 ```
 
+**Acceso:** Público.
 
-# Próximas funcionalidades
+Obtiene el listado de eventos.
 
-- Inscripción de usuarios.
-- Control de cupos.
-- Notificaciones.
+La respuesta incluye información de paginación.
+
+### Parámetros de consulta
+
+```text
+status
+category
+location
+dateFrom
+dateTo
+page
+limit
+sort
+```
+
+### Ejemplo
+
+```http
+GET /api/events?page=1&limit=10&sort=date
+```
+
+---
+
+## Obtener evento por ID
+
+```http
+GET /api/events/:id
+```
+
+**Acceso:** Público.
+
+Obtiene la información de un evento específico.
+
+### Ejemplo
+
+```http
+GET /api/events/6aa5a1bdc6dde33ccbf99052
+```
+
+Si el ID no tiene un formato válido:
+
+```text
+400 Bad Request
+```
+
+Si el evento no existe:
+
+```text
+404 Not Found
+```
+
+---
+
+## Crear evento
+
+```http
+POST /api/events
+```
+
+**Acceso:** `organizer`, `admin`.
+
+Requiere autenticación y autorización mediante roles.
+
+El usuario autenticado como `organizer` o `admin` puede crear un evento.
+
+### Request
+
+```json
+{
+  "title": "Congreso Tech 2027",
+  "description": "Evento sobre tecnología",
+  "category": "Tecnología",
+  "location": "Buenos Aires",
+  "date": "2027-01-20T20:00:00.000Z",
+  "capacity": 50,
+  "price": 1000
+}
+```
+
+El `organizer` del evento se obtiene a partir del usuario autenticado.
+
+---
+
+## Actualizar evento
+
+```http
+PUT /api/events/:id
+```
+
+**Acceso:** `organizer`, `admin`.
+
+Requiere autenticación.
+
+El `organizer` solamente puede modificar eventos de los cuales es propietario.
+
+El `admin` puede modificar cualquier evento.
+
+---
+
+## Cambiar estado del evento
+
+```http
+PATCH /api/events/:id/status
+```
+
+**Acceso:** `organizer`, `admin`.
+
+Requiere autenticación.
+
+### Request
+
+```json
+{
+  "status": "published"
+}
+```
+
+Estados disponibles:
+
+```text
+draft
+published
+cancelled
+finished
+```
+
+El `organizer` solamente puede modificar el estado de sus propios eventos.
+
+El `admin` puede modificar el estado de cualquier evento.
+
+---
+
+# 🎟️ Tickets / Inscripciones
+
+## Obtener todos los tickets
+
+```http
+GET /api/tickets
+```
+
+**Acceso:** Público.
+
+Obtiene el listado de tickets.
+
+Permite utilizar filtros, paginación y ordenamiento.
+
+### Parámetros
+
+```text
+status
+eventId
+page
+limit
+sort
+```
+
+### Ejemplo
+
+```http
+GET /api/tickets?status=active&page=1&limit=10
+```
+
+---
+
+## Obtener mis tickets
+
+```http
+GET /api/tickets/my/tickets
+```
+
+**Acceso:** Requiere autenticación.
+
+Devuelve únicamente los tickets asociados al usuario autenticado.
+
+> Esta ruta se encuentra definida antes de `/:id` para evitar que `my/tickets` sea interpretado como un ID de ticket.
+
+---
+
+## Obtener ticket por ID
+
+```http
+GET /api/tickets/:id
+```
+
+**Acceso:** Público.
+
+Obtiene un ticket específico mediante su ID.
+
+### Ejemplo
+
+```http
+GET /api/tickets/665f2a...
+```
+
+---
+
+## Crear ticket
+
+```http
+POST /api/tickets
+```
+
+**Acceso:** `user`, `organizer`, `admin`.
+
+Requiere autenticación y autorización mediante roles.
+
+### Request
+
+```json
+{
+  "eventId": "6aa5a1bdc6dde33ccbf99052",
+  "quantity": 1
+}
+```
+
+Durante la creación se validan las reglas de negocio:
+
+* El evento debe existir.
+* El evento debe estar publicado.
+* El evento no debe haber finalizado.
+* La cantidad debe ser mayor que cero.
+* El usuario no debe tener otro ticket activo para el mismo evento.
+* Debe existir disponibilidad.
+* Se genera automáticamente un código único de ticket.
+
+### Response — 201
+
+```json
+{
+  "status": "success",
+  "message": "Ticket creado",
+  "data": {
+    "id": "665f2a...",
+    "status": "active",
+    "quantity": 1,
+    "code": "TKT-XXXX-XXXX"
+  }
+}
+```
+
+---
+
+## Cancelar ticket
+
+```http
+PATCH /api/tickets/:id/cancel
+```
+
+**Acceso:** `user`, `organizer`, `admin`.
+
+Requiere autenticación y autorización mediante roles.
+
+El usuario puede cancelar su propio ticket.
+
+El administrador puede gestionar cualquier ticket.
+
+### Response — 200
+
+```json
+{
+  "status": "success",
+  "message": "El ticket fue cancelado correctamente",
+  "data": {
+    "id": "665f2a...",
+    "status": "cancelled",
+    "quantity": 1,
+    "code": "TKT-XXXX-XXXX"
+  }
+}
+```
+
+Si el ticket ya se encuentra cancelado:
+
+```json
+{
+  "status": "error",
+  "message": "El ticket ya está cancelado"
+}
+```
+
+---
+
+# 🔐 Matriz de acceso
+
+| Método  | Ruta                            | Público | `user` | `organizer` | `admin` |
+| ------- | ------------------------------- | :-----: | :----: | :---------: | :-----: |
+| `POST`  | `/api/sessions/register`        |    ✅    |    —   |      —      |    —    |
+| `POST`  | `/api/sessions/login`           |    ✅    |    —   |      —      |    —    |
+| `GET`   | `/api/sessions/github`          |    ✅    |    —   |      —      |    —    |
+| `GET`   | `/api/sessions/github/callback` |    ✅    |    —   |      —      |    —    |
+| `GET`   | `/api/sessions/current`         |    ❌    |    ✅   |      ✅      |    ✅    |
+| `POST`  | `/api/sessions/logout`          |    ✅    |    —   |      —      |    —    |
+| `GET`   | `/api/events/health`            |    ✅    |    ✅   |      ✅      |    ✅    |
+| `GET`   | `/api/events`                   |    ✅    |    ✅   |      ✅      |    ✅    |
+| `GET`   | `/api/events/:id`               |    ✅    |    ✅   |      ✅      |    ✅    |
+| `POST`  | `/api/events`                   |    ❌    |    ❌   |      ✅      |    ✅    |
+| `PUT`   | `/api/events/:id`               |    ❌    |    ❌   |      ✅*     |    ✅    |
+| `PATCH` | `/api/events/:id/status`        |    ❌    |    ❌   |      ✅*     |    ✅    |
+| `GET`   | `/api/tickets`                  |    ✅    |    ✅   |      ✅      |    ✅    |
+| `GET`   | `/api/tickets/my/tickets`       |    ❌    |    ✅   |      ✅      |    ✅    |
+| `GET`   | `/api/tickets/:id`              |    ✅    |    ✅   |      ✅      |    ✅    |
+| `POST`  | `/api/tickets`                  |    ❌    |    ✅   |      ✅      |    ✅    |
+| `PATCH` | `/api/tickets/:id/cancel`       |    ❌    |    ✅   |      ✅      |    ✅    |
+
+> `*` El `organizer` solamente puede actualizar o cambiar el estado de eventos de los cuales es propietario.
+
+---
+
+# 🧪 Flujos principales probados
+
+## Flujo de autenticación
+
+```text
+POST /api/sessions/register
+        ↓
+POST /api/sessions/login
+        ↓
+Cookie currentUser
+        ↓
+GET /api/sessions/current
+        ↓
+POST /api/sessions/logout
+        ↓
+GET /api/sessions/current
+        ↓
+401 No autenticado
+```
+
+## Flujo de eventos
+
+```text
+Login como admin/organizer
+        ↓
+POST /api/events
+        ↓
+GET /api/events
+        ↓
+GET /api/events/:id
+        ↓
+PUT /api/events/:id
+        ↓
+PATCH /api/events/:id/status
+```
+
+## Flujo de inscripción
+
+```text
+Usuario autenticado
+        ↓
+POST /api/tickets
+        ↓
+GET /api/tickets/my/tickets
+        ↓
+GET /api/tickets/:id
+        ↓
+PATCH /api/tickets/:id/cancel
+```
+
+---
+
+# ⚠️ Códigos HTTP utilizados
+
+| Código | Situación                                      |
+| ------ | ---------------------------------------------- |
+| `200`  | Operación exitosa.                             |
+| `201`  | Usuario, evento o ticket creado correctamente. |
+| `400`  | Datos inválidos o error de negocio.            |
+| `401`  | Usuario no autenticado.                        |
+| `403`  | Usuario autenticado sin permisos suficientes.  |
+| `404`  | Recurso no encontrado.                         |
+| `409`  | Conflicto, como email duplicado.               |
+| `500`  | Error interno del servidor.                    |
+
+---
+
+# 🏗️ Arquitectura aplicada
+
+El flujo de las operaciones principales sigue la separación de responsabilidades:
+
+```text
+Routes
+   │
+   ▼
+Passport / Middlewares
+   │
+   ▼
+Controllers
+   │
+   ▼
+Services
+   │
+   ▼
+Repositories
+   │
+   ▼
+DAO
+   │
+   ▼
+Models
+   │
+   ▼
+MongoDB
+```
+
+### Ejemplo de acceso a usuarios
+
+```text
+Passport / SessionService
+        ↓
+UserRepository
+        ↓
+UserDAO
+        ↓
+UserModel
+        ↓
+MongoDB
+```
+
+### Ejemplo de eventos
+
+```text
+Events Route
+      ↓
+Event Controller
+      ↓
+Event Service
+      ↓
+Event Repository
+      ↓
+Event DAO
+      ↓
+EventModel
+      ↓
+MongoDB
+```
+
+### Ejemplo de tickets
+
+```text
+Tickets Route
+      ↓
+Ticket Controller
+      ↓
+Ticket Service
+      ↓
+Ticket Repository
+      ↓
+Ticket DAO
+      ↓
+TicketModel
+      ↓
+MongoDB
+```
+
+Los **DAO son los únicos componentes que acceden directamente a los Models**, mientras que los Services trabajan con los Repositories.
+
+---
+
+# 📄 DTOs
+
+Los DTOs controlan la información que se expone al cliente.
+
+### `UserDTO`
+
+Representa la información pública de un usuario.
+
+### `CurrentUserDTO`
+
+Representa la información del usuario autenticado.
+
+### `EventDTO`
+
+Transforma la información de un evento y controla los datos del organizador.
+
+### `TicketDTO`
+
+Transforma la información del ticket y sus entidades relacionadas.
+
+Los DTOs evitan exponer información sensible, especialmente la contraseña del usuario.
 
 ---
 
@@ -554,6 +940,13 @@ Envío de email de confirmación al crear un ticket.
 
 ![Endpoint Events GET](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1787837180/getEvents_kxfgzi.png)
 ![Endpoint Events POST](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1787837155/postEvento_zevucf.png)
+![Endpoint Events PUT](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1789336374/putEvent_kt290h.png)
+![Error Event PUT -> 403](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1789336006/putOwnerOrganizer_a3a3gz.png)
+![Endpoint Events PATCH](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1789336083/eventStatus_ubjntj.png)
+![Error Event PATCH -> 400](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1789335968/patchNuevamente_dakpe1.png)
+![Error Event PATCH -> INVALID](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1789335987/patchInvalido_mukeja.png)
+![Error Event 404](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1789242660/eventoNotFound_eilnld.png)
+![Error Event 400](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1789242684/idInvalid_po1e1m.png)
 ---
 
 ## Endpoint Sessions
@@ -565,15 +958,28 @@ Envío de email de confirmación al crear un ticket.
 ![Endpoint Sessions-Logout POST](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1786210871/logout_k8ofbi.png)
 ---
 
-# Notas
+## Endpoint Tickets
 
-- El proyecto utiliza **ES Modules** (`"type": "module"` en `package.json`).
-- La autenticación se encuentra centralizada mediante Passport.js.
-- Las estrategias register, login y current se encuentran centralizadas en src/config/passport.config.js.
-- Passport se inicializa en app.js mediante passport.initialize().
-- Passport valida las credenciales y el JWT, mientras que el controller es responsable de generar el JWT y establecer la cookie después de un login exitoso.
-- La contraseña nunca se devuelve en las respuestas de la API.
-- El logout elimina la cookie currentUser y no requiere autenticación mediante Passport.
-- La aplicación utiliza una arquitectura por capas para facilitar el mantenimiento y la incorporación de nuevas funcionalidades.
-- La estructura queda preparada para incorporar futuras estrategias de autenticación mediante providers externos, como Google o GitHub, sin modificar app.js.
-- El proyecto sigue una arquitectura por capas para facilitar su evolución durante el curso.
+![Endpoint Tickets GET](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1789242671/getMyTickets_tpk09b.png)
+![Endpoint Tickets POST](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1789243996/postTickets_sithxi.png)
+![Endpoint Tickets PATCH](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1789244014/ticketCancelTwo_hxcull.png)
+![Error Tickets 403](https://res.cloudinary.com/dcfo0mbfj/image/upload/v1789243984/postEventDenegadoUser_nro3ru.png)
+---
+
+# 📝 Notas
+
+* El proyecto utiliza **ES Modules** mediante `"type": "module"`.
+* Passport centraliza las estrategias de autenticación.
+* El JWT se almacena en la cookie HTTP Only `currentUser`.
+* Los DAO son los únicos componentes que acceden directamente a los Models.
+* Los Repositories utilizan los DAO.
+* Los Services contienen la lógica de negocio.
+* Los Controllers coordinan las solicitudes y respuestas HTTP.
+* Los DTOs controlan la información expuesta al cliente.
+* La autorización se realiza mediante roles.
+* Los `organizer` solamente pueden gestionar sus propios eventos.
+* Los `admin` pueden gestionar cualquier evento.
+* La aplicación incorpora control de capacidad para las inscripciones.
+* Los tickets poseen códigos únicos generados automáticamente.
+* Se envía un email de confirmación al crear una inscripción.
+* Las contraseñas nunca se devuelven en las respuestas de la API.
