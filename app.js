@@ -22,14 +22,17 @@ app.use('/api/sessions', sessionRouter);
 app.use('/api/tickets', ticketRouter);
 
 app.use((err, req, res, next) => {
-  console.error(err);
 
-  const status = err.status || 500;
+    console.error(err);
 
-  res.status(status).json({
-    status: "error",
-    message: err.message || "Error interno del servidor"
-  });
+    const status = err.statusCode || 500;
+
+    res.status(status).json({
+        status: "error",
+        code: err.code || "INTERNAL_SERVER_ERROR",
+        message: err.message || "Error interno del servidor"
+    });
+
 });
 
 app.listen(PORT, () => {

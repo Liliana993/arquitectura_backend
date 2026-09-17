@@ -14,7 +14,7 @@ import { authorizeRoles } from "../middlewares/authorize.middleware.js";
 const router = Router();
 
 // Autenticado - ver mis tickets (debe ir antes de /:id)
-router.get("/my/tickets", authMiddleware, getMyTickets);
+router.get("/my-tickets", authMiddleware, getMyTickets);
 
 // Público
 router.get("/", getTickets);

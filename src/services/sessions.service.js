@@ -1,5 +1,6 @@
 import userRepository from '../repositories/user.repository.js';
 import { hashPassword } from '../utils/hash.js';
+import AppError from '../utils/app.error.js';
 
 class SessionService {
 
@@ -7,7 +8,11 @@ class SessionService {
     const { first_name, last_name, email, password } = userData;
 
     if (!first_name || !last_name || !email || !password) {
-        throw new Error("Missing required fields");
+        throw new AppError(
+            "Missing required fields",
+            400,
+            "MISSING_REQUIRED_FIELDS"
+        );
     }
 
     const emailNormalized = email.trim().toLowerCase();
@@ -15,18 +20,30 @@ class SessionService {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(emailNormalized)) {
-        throw new Error("Invalid email format");
+        throw new AppError(
+        "Invalid email format",
+        400,
+        "INVALID_EMAIL_FORMAT"
+    );
     }
 
     if (password.length < 6) {
-        throw new Error("Password must be at least 6 characters long");
+        throw new AppError(
+            "Password must be at least 6 characters long",
+            400,
+            "INVALID_PASSWORD_LENGTH"
+        );
     }
 
     const existingUser =
         await userRepository.getUserByEmail(emailNormalized);
 
     if (existingUser) {
-        throw new Error("Email already in use");
+        throw new AppError(
+        "Email already in use",
+        409,
+        "EMAIL_ALREADY_EXISTS"
+        );
     }
 
     const hashedPassword = await hashPassword(password);

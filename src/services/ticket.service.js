@@ -3,11 +3,12 @@ import {TicketRepository} from "../repositories/ticket.repository.js";
 import {EventRepository} from "../repositories/event.repository.js";
 import { generateTicketCode } from "../utils/ticketcode.js";
 import { sendTicketConfirmationEmail } from "../services/email.service.js";
+import AppError from "../utils/app.error.js";
 
 const VALID_STATUSES = ["active", "cancelled"];
 
-const businessError = (message, status = 400) =>
-  Object.assign(new Error(message), { status });
+const businessError = (message, status = 400, code = "BUSINESS_ERROR") =>
+  Object.assign(new Error(message), { status, code });
 
 export class TicketService {
   constructor() {
@@ -17,7 +18,7 @@ export class TicketService {
 
    validateObjectId(id) {
     if (!mongoose.isValidObjectId(id)) {
-      throw businessError("ID de ticket inválido", 400);
+      throw businessError("Ticket no encontrado", 404, "TICKET_NOT_FOUND");
     }
   }
 
@@ -81,6 +82,20 @@ export class TicketService {
       code
     });
 
+    try {
+  await sendTicketConfirmationEmail(
+    user.email,
+    user.first_name,
+    event.title,
+    code
+  );
+
+  console.log("✅ Email de confirmación enviado a:", user.email);
+} catch (error) {
+  console.error("❌ Error al enviar email de confirmación:", error);
+}
+
+    /*
     sendTicketConfirmationEmail(
       user.email,
       user.firstName,
@@ -88,7 +103,7 @@ export class TicketService {
       code
     ).catch(error => {
       console.error("Error al enviar email de confirmación:", error);
-    });
+    });*/
 
     return ticket;
   }
@@ -229,20 +244,38 @@ export class TicketService {
     const ticket = await this.getTicketById(id);
 
     if (ticket.status === "cancelled") {
-      throw businessError("El ticket ya está cancelado");
+        throw businessError(
+            "El ticket ya está cancelado",
+            400,
+            "TICKET_ALREADY_CANCELLED"
+        );
     }
 
     await this.assertCanManage(ticket, user);
 
-    const event = await this.eventRepository.findEventById(ticket.event.id);
+    const event = await this.eventRepository.findEventById(
+        ticket.event.id
+    );
+
+    if (!event) {
+        throw businessError(
+            "Evento no encontrado",
+            404,
+            "EVENT_NOT_FOUND"
+        );
+    }
 
     if (event.date <= new Date()) {
-      throw businessError("No se puede cancelar un ticket de un evento que ya ha pasado");
+        throw businessError(
+            "No se puede cancelar un ticket de un evento que ya ha pasado",
+            400,
+            "EVENT_ALREADY_PASSED"
+        );
     }
 
     return this.ticketRepository.updateById(id, {
-      status: "cancelled",
-      cancelledAt: new Date()
+        status: "cancelled",
+        cancelledAt: new Date()
     });
-  }
+}
 } 

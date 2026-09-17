@@ -6,6 +6,8 @@ class EventDTO {
         this.date = event.date;
         this.capacity = event.capacity;
         this.price = event.price;
+        this.category = event.category;
+        this.location = event.location;
         this.organizer = this.formatOrganizer(event.organizer);
         this.status = event.status;
         this.createdAt = event.createdAt;

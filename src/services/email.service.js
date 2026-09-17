@@ -40,7 +40,8 @@ export const sendTicketConfirmationEmail = async (to, userName, eventTitle, tick
 
 
     } catch (error) {
-        console.error("Error al enviar email:", error)
+        console.error("❌ Error en Nodemailer:", error);
+    throw error;
     }
 
 }

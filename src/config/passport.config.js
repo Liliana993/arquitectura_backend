@@ -30,16 +30,6 @@ passport.use('register', new LocalStrategy({
 
             return done(null, newUser);
         } catch (error) {
-            if(error.code === "EMAIL_EXISTS"){
-                return done(
-                 null,
-                 false,
-               {
-                 message:
-                "El email ya está registrado"
-                }
-              );
-            }
             return done(error);
         }
     }
